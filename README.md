@@ -1,3 +1,20 @@
+# This is HK Practice Branch!!! 
+## Hardware & Software
+### HW
+ASUS ROG Zephyrus M16 GU603ZM
+I9-12900H (2.5 GHz, 14 core(6P+8E), 20 thread), RAM 16GB, RTX3060 Laptop GPU
+
+### SW
+GPU Driver : nvidia-driver-470
+Anaconda 22.9.0
+Python=3.7
+Pytorch 1.13.1 + CUDA 11.0
+
+
+
+
+
+
 # TOCABI Reinforcement Learning
 This package includes MuJoCo environment for humanoid TOCABI reinforcement learning. TOCABI is a human-sized humanoid developed in Seoul National University [DYROS LAB](http://dyros.snu.ac.kr/). The `main` branch includes an end-to-end torque control RL. 
 
