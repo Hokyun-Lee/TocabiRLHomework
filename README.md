@@ -1,18 +1,80 @@
-# This is HK Practice Branch!!! 
+# Welcome to HK TocabiRL Practice Branch 🐯
 ## Hardware & Software
 ### HW
-ASUS ROG Zephyrus M16 GU603ZM
-I9-12900H (2.5 GHz, 14 core(6P+8E), 20 thread), RAM 16GB, RTX3060 Laptop GPU
-
+> ASUS ROG Zephyrus M16 GU603ZM
+> 
+> I9-12900H (2.5 GHz, 14 core(6P+8E), 20 thread), RAM 16GB, RTX3060 Laptop GPU
 ### SW
-GPU Driver : nvidia-driver-470
-Anaconda 22.9.0
-Python=3.7
-Pytorch 1.13.1 + CUDA 11.0
+> GPU Driver : nvidia-driver-470
+> 
+> Anaconda 22.9.0
+> 
+> Python=3.7 + Pytorch 1.13.1 + CUDA 11.7
 
 
+## **Installation**
+Grapic Driver Setup.(>= Nvidia-driver-450 for CUDA 11.7) [ref](https://www.oofbird.me/77)
+```
+    sudo apt update
+    sudo apt upgrade
+    sudo apt remove nvidia-driver-* (Optional)
+    sudo apt install nvidia-driver-470
+    sudo reboot
 
+    (After Reboot)
+    nvidia-smi
+```
 
+Download the MuJoCo version 2.1 and Dependencies.
+```
+    cd ~/Downloads
+    wget https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz
+    mkdir ~/.mujoco/
+    tar -xzvf ~/Downloads/mujoco210-linux-x86_64.tar.gz -C ~/.mujoco/
+    sudo apt install libosmesa6-dev libgl1-mesa-glx libglfw3
+```
+
+You may need to add environment variables such as to your '~/.bashrc' file:
+```
+    export LD_LIBRARY_PATH=/home/$user_name$/.mujoco/mujoco210/bin
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/nvidia
+    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so:/usr/lib/x86_64-linux-gnu/libGL.so
+```
+
+Install Anaconda [ref](https://jongsky.tistory.com/21)
+```
+    sudo apt install curl -y
+    curl --output anaconda.sh https://repo.anaconda.com/archive/Anaconda3-2022.10-Linux-x86_64.sh
+    sha256sum anaconda.sh
+    bash anaconda.sh
+
+    gedit ~/.bashrc
+    (and add the line below.)
+    (export PATH=~/anaconda3/bin:~/anaconda3/condabin:$PATH)
+    source ~/.bashrc
+
+    (Check installation.)
+    conda -V
+```
+
+Create Conda Env.
+```
+    conda create -n tocabirl python=3.7
+    conda activate tocabirl
+    cd ~/Desktop
+    git clone https://github.com/kdh0429/TocabiRLHomework.git
+    cd TocabiRLHomework
+    pip install .
+    pip uninstall torch
+    pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
+    pip install "cython<3" (Optional : E:Cannot assign type 'void(const char) except * nogil')
+    sudo apt-get insatll patchelf (Optional : E: 'patchelf')
+    pip uninstall nvidia-cublas-cu11 (Optional)
+```
+
+---
+---
+---
 
 
 # TOCABI Reinforcement Learning
