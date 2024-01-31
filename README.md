@@ -65,7 +65,7 @@ Create Conda Env.
     git clone https://github.com/kdh0429/TocabiRLHomework.git
     cd TocabiRLHomework
     pip install .
-    pip uninstall torch
+    pip uninstall torch (optional, python << print(torch.__version__))
     pip install torch==1.13.1+cu117 torchvision==0.14.1+cu117 torchaudio==0.13.1 --extra-index-url https://download.pytorch.org/whl/cu117
     pip install "cython<3" (Optional : E:Cannot assign type 'void(const char) except * nogil')
     sudo apt-get insatll patchelf (Optional : E: 'patchelf')
