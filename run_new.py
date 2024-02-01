@@ -73,7 +73,7 @@ def setup_env():
    # Use single environment if only using 1 core
    if args.n_cpu == 1:
       env = gym.make(env_id)
-      env = DummyVecEnv([lambda: env])
+      env = DummyVecEnv([lambda: env]) # HK: what is this for?
    else:
       env = SubprocVecEnv([make_env(env_id, i) for i in range(args.n_cpu)])
 
@@ -86,6 +86,8 @@ def train():
    try: os.mkdir(_dir)
    except: pass 
 
+   # PPO 모델 생성. 인자={env, nsteps, batchsize, render, learning_rate(linear), task}
+   # HK: what is 'FixedStddevMlpPolicy'?
    model = PPO('FixedStddevMlpPolicy', args.env, n_steps=args.n_steps, 
                batch_size=args.batch_size, render=args.render, 
                learning_rate=linear_schedule(initial_lr=args.initial_lr, final_lr=args.final_lr), task=args.task)
@@ -127,6 +129,7 @@ def save_model(model, file_name):
 
 
 def main():
+   
    setup_env()
 
    # Run a new training

@@ -9,6 +9,7 @@ from .utils.cubic import cubic
 from .utils.lpf import lpf
 from .utils.rotation import quat2fixedXYZ
 
+# 땅과 닿는 링크 리스트 (Early terminate)
 GroundCollisionCheckBodyList = ["base_link",\
             "R_HipRoll_Link", "R_HipCenter_Link", "R_Thigh_Link", "R_Knee_Link",\
             "L_HipRoll_Link", "L_HipCenter_Link", "L_Thigh_Link", "L_Knee_Link",\
@@ -20,6 +21,7 @@ SelfCollisionCheckBodyList = GroundCollisionCheckBodyList + ["L_AnkleCenter_Link
 
 ObstacleList = ["obstacle1", "obstacle2", "obstacle3", "obstacle4", "obstacle5", "obstacle6", "obstacle7", "obstacle8", "obstacle9"]
 
+# 33자유도 게인 (다리(왼,오? 오,왼?), 허리, 팔(왼,오?),목,팔(왼,오?)) 순서
 Kp = np.array([2000.0, 5000.0, 4000.0, 3700.0, 3200.0, 3200.0,
      2000.0, 5000.0, 4000.0, 3700.0, 3200.0, 3200.0,
      6000.0, 10000.0, 10000.0,
@@ -36,15 +38,22 @@ Kv = np.array([15.0, 50.0, 20.0, 25.0, 24.0, 24.0,
 
 control_freq_scale = 1
 
+# 슈퍼클래스(부모)
+# class 자식(부모), 클래스 상속
 class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
+    #제어 주기 스케일링, frameskip
+    #scale=8이면 2000/8 = 250HZ
     def __init__(self, frameskip=int(8/control_freq_scale)):
+        # 부모클래스의 메소드를 상속받아 실행한다.
         super(DYROSTocabiEnv, self).__init__('dyros_tocabi.xml', frameskip)
         
+        #충돌 바디 추가
         for id in GroundCollisionCheckBodyList:
             self.ground_collision_check_id.append(self.model.body_name2id(id))
         for id in SelfCollisionCheckBodyList:
             self.self_collision_check_id.append(self.model.body_name2id(id))
         self.ground_id.append(0)
+        #발 링크 추가
         self.right_foot_id.append(self.model.body_name2id("R_Foot_Link"))
         self.left_foot_id.append(self.model.body_name2id("L_Foot_Link"))
         
@@ -54,6 +63,8 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         print("R Foot ID",self.model.body_name2id("R_Foot_Link"))
         print("L Foot ID",self.model.body_name2id("L_Foot_Link"))
 
+    #observe
+    #이게 state라고 생각할수 있나?
     def _get_obs(self):
         qpos = self.sim.data.qpos
         qvel = self.sim.data.qvel
@@ -82,8 +93,12 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         self.qvel_pre = np.copy(qvel[6:])
         self.action_raw_pre = np.copy(self.action_raw)
 
+        #현재의 관측치 재정의 x-u/sqrt(var+0.00000001)
+        # HK : var + "1e-8" 해주는이유는?
+        # cur_obs의 차원은 37차원? 각각 계산?
         cur_obs = (cur_obs - self.obs_mean) / np.sqrt(self.obs_var + 1e-8)
 
+        # HK: 버퍼? 얘의 역할은?
         if (self.epi_len == 0 or self.obs_buf == []):
             for _ in range(self.num_obs_hist):
                 for _ in range(self.num_obs_skip):
@@ -95,6 +110,8 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         self.action_buf[0:self.num_obs_skip*self.num_obs_hist-1] = self.action_buf[1:self.num_obs_skip*self.num_obs_hist]
         self.action_buf[-1] = np.array(self.action_raw, dtype=np.float64)
 
+        #observation = 5
+        #skip = 2
         obs = []
         for i in range(self.num_obs_hist):
             obs.append(self.obs_buf[self.num_obs_skip*(i+1)-1])
@@ -107,6 +124,8 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
 
     def step(self, a):
         self.action_raw = np.copy(a)
+        
+        #self.action_high = np.concatenate([self.actuator_high[0:12], [self.dt]])
         a = a * self.action_high
         done_by_early_stop = False
         self.action_cur = a[0:-1] * self.motor_constant_scale\
