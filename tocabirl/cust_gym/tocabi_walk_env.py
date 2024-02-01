@@ -105,7 +105,7 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
         #질량 노이즈
         self.body_mass_noise = np.random.uniform(0.8, 1.2, len(self.nominal_body_mass))
 
-        # 모터 상수
+        # 모터 상수 스케일링(랜덤, 노이즈)
         motor_constant_scale = np.random.uniform(0.95, 1.05, 6)
         # np.tile(x, n) : x를 n번 쌓음
         # 즉 모터상수 스케일이 12차원이됨
@@ -227,8 +227,9 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
             bounds = self.model.actuator_ctrlrange.copy()[0:12]
             bounds[:] = [-1.0, 1.0]
             # 하체 액추에이터 12차원 -1.0~1.0 + [[0.0, 1.0]] 
-            # HK: 뒤에 두개는 뭐지? 아!!! 지지발?
+            # HK: 뒤에 두개는 뭐지? 지지발? low 0이고 high가 1인것은?
             bounds = np.concatenate([bounds, [[0.0, 1.0]]])
+            # 2x13차원 각각 low, high로 분리
             low, high = bounds.T
             #gym action space, Box
             #https://codetorial.net/articles/cartpole/space.html

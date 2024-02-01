@@ -123,16 +123,23 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         return np.concatenate([np.array(obs).flatten(), np.array(act).flatten()])
 
     def step(self, a):
+        ## a = self.action_space.sample()
         self.action_raw = np.copy(a)
-        
-        #self.action_high = np.concatenate([self.actuator_high[0:12], [self.dt]])
+        ## self.action_high = np.concatenate([self.actuator_high[0:12], [self.dt]])
         a = a * self.action_high
         done_by_early_stop = False
+        #HK : 역슬래시 오타?? 기능이있나?? 찾아봤을땐 없었음 "\"??
+        ## motor_constant_scale = np.random.uniform(0.95, 1.05, 6)
         self.action_cur = a[0:-1] * self.motor_constant_scale\
 
+        #모캡 데이터 개수
+        ## self.mocap_data_num = len(self.mocap_data) - 1
+        ## self.mocap_cycle_dt = 0.0005
         mocap_cycle_period = self.mocap_data_num* self.mocap_cycle_dt
 
         local_time = self.time % mocap_cycle_period
+        ## self.init_mocap_data_idx = 0
+        ## self.mocap_data_idx = 0
         local_time_plus_init = (local_time + self.init_mocap_data_idx*self.mocap_cycle_dt) % mocap_cycle_period
         self.mocap_data_idx = (self.init_mocap_data_idx + int(local_time / self.mocap_cycle_dt)) % self.mocap_data_num
         next_idx = self.mocap_data_idx + 1 
@@ -172,6 +179,7 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         qpos = self.sim.data.qpos
         qvel = self.sim.data.qvel
         
+        ##########
         # Collision Check
         geom1 = np.zeros(self.sim.data.ncon)
         geom2 = np.zeros(self.sim.data.ncon)
@@ -213,10 +221,13 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
 
         if (baseQuatError > 1.0):
             done_by_early_stop = True
+        ##########
 
         pelvis_quat = Quaternion(array=qpos[3:7])
         pelvis_vel_local = pelvis_quat.conjugate.rotate(qvel[0:3])
 
+        ##########
+        #reward, penalty
         mimic_body_orientation_reward =  0.3 * exp(-13.2*abs(baseQuatError)) 
         qpos_regulation = 0.35*exp(-4.0*(np.linalg.norm(target_data_qpos - qpos[7:])**2))
         qvel_regulation = 0.05*exp(-0.01*(np.linalg.norm(self.init_qvel[6:] - qvel[6:])**2))
@@ -228,6 +239,7 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         weight_scale = sum(self.model.body_mass[:]) / sum(self.nominal_body_mass)
         force_ref_reward = 0.1*exp(-0.001*(np.linalg.norm(self.ft_left_foot[2] - weight_scale*self.mocap_data[self.mocap_data_idx,34]))) \
                         + 0.1*exp(-0.001*(np.linalg.norm(self.ft_right_foot[2] - weight_scale*self.mocap_data[self.mocap_data_idx,35])))
+        
 
         if ((self.mocap_data_idx < 300) or \
             (3300 < self.mocap_data_idx and self.mocap_data_idx < 3600) or \
@@ -260,7 +272,8 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
                 contact_force_penalty + torque_regulation + torque_diff_regulation + \
                 qacc_regulation + body_vel_reward + foot_contact_reward + contact_force_diff_regulation + \
                 force_thres_penalty + force_diff_thres_penalty + force_ref_reward
-        
+        ##########
+
         self.ft_left_foot_pre = np.copy(self.ft_left_foot)
         self.ft_right_foot_pre = np.copy(self.ft_right_foot)
 
