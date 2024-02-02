@@ -95,8 +95,15 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
 
         #현재의 관측치 재정의 x-u/sqrt(var+0.00000001)
         # HK : var + "1e-8" 해주는이유는?
+        # 분모가 0이 안되게하려고
         # cur_obs의 차원은 37차원? 각각 계산?
+        # 학습할때 노말레이제이션하는거다.
+        # 노말라이즈 해주는 작업이다.
+        # 0과 1 사이이길 바라는 작업이다.
+        #에프티센서는 1000씩된다
+        #노말디스트리뷰션화한다.
         cur_obs = (cur_obs - self.obs_mean) / np.sqrt(self.obs_var + 1e-8)
+
 
         # HK: 버퍼? 얘의 역할은?
         if (self.epi_len == 0 or self.obs_buf == []):
@@ -130,7 +137,7 @@ class DYROSTocabiEnv(tocabi_walk_env.TocabiEnv):
         done_by_early_stop = False
         #HK : 역슬래시 오타?? 기능이있나?? 찾아봤을땐 없었음 "\"??
         ## motor_constant_scale = np.random.uniform(0.95, 1.05, 6)
-        self.action_cur = a[0:-1] * self.motor_constant_scale\
+        self.action_cur = a[0:-1] * self.motor_constant_scale
 
         #모캡 데이터 개수
         ## self.mocap_data_num = len(self.mocap_data) - 1

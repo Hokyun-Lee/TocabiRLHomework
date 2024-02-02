@@ -36,6 +36,7 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
             # 1. 메쉬 경로 설정, 마찰 설정, 중력 옵션설정
             # 2. 메쉬파일(STL), 이름 설정
             ## HK : sacle 변수는 뭔가?scale="0.001 0.001 0.001" 예상 : xyz 1/1000배 크기 scaling
+            # 비주얼라이즈할때 머리가 1000배돼있더라
             # 2-1. texture, material
             # 이해못함, 환경일듯
             # 3. base_link body 로부터 Tree 구조로 링크-조인트-링크 선언
@@ -67,6 +68,7 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
         
         # self.init_q_desited[?] 
         # HK: [?] 38번까지 있는 이유를? 모르겠음.. 예상 : 버추얼 조인트 6개 추가? 33+6 = 39dof라서 인덱스가 0~38?   
+        # 맞음 쿼터니안 들어가서 7개+33개 다 지정해주진않았음.
         self.init_q_desired = np.copy(self.data.qpos)
         self.init_q_desired[7:] = 0.0
         self.init_q_desired[9] = -0.24
@@ -174,10 +176,13 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
         # 하체 q값
         self.q_bias = np.random.uniform(-0.034, 0.034, 12)
         # 쿼터니안 바이어스? HK : 어디에 쓰는거지? quaternian이면 4개여야하는데 w빼고 뽑는건가?(x,y,z만?)
+        # 오일러 바이어스라고볼것
         self.quat_bias = np.random.uniform(-3.14/300.0, 3.14/300.0, 3)
         #ft센서 bias인데, HK: 2개만 뽑는 이유? 단위? 예상 : x,y만 다루는 학습?
+        # 왼발 오른발, Z만쓴다
         self.ft_bias = np.random.uniform(-100.0, 100.0, 2)
         #마찬가지로 모멘트 bias. HK:모멘트는 mx면 x축기준 모멘트 두개를 뽑는거? my면??? (잘모르겠다)
+        #롤 피치
         self.ft_mx_bias = np.random.uniform(-10.0, 10.0, 2)
         self.ft_my_bias = np.random.uniform(-30.0, 30.0, 2)
 
@@ -224,10 +229,13 @@ class TocabiEnv(gym.envs.mujoco.MujocoEnv):
         if self.custom_action_space:
             # HK: dyros_tocabi.xml의 actuator_ctrlrange를 불러오는게 맞는지? [0:12]가 하체이긴함.
             # HK : 근데이게 스케일이 뭐지? degree? current??
+
+            # 단위 : 뉴턴미터 준휘형이 임의로 정한걸거임
             bounds = self.model.actuator_ctrlrange.copy()[0:12]
             bounds[:] = [-1.0, 1.0]
             # 하체 액추에이터 12차원 -1.0~1.0 + [[0.0, 1.0]] 
             # HK: 뒤에 두개는 뭐지? 지지발? low 0이고 high가 1인것은?
+            # 페이즈 모듈레이션 파이값 범위 0에서 1로 돼있음 0에서 dt
             bounds = np.concatenate([bounds, [[0.0, 1.0]]])
             # 2x13차원 각각 low, high로 분리
             low, high = bounds.T

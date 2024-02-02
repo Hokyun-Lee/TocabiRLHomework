@@ -88,6 +88,11 @@ def train():
 
    # PPO 모델 생성. 인자={env, nsteps, batchsize, render, learning_rate(linear), task}
    # HK: what is 'FixedStddevMlpPolicy'?
+   # 액션이 가우시안 디스트리뷰션있는데 디스트리뷰ㅅㄴ에서 샘플링을한다.
+   # 그인자로 들어가는 스탠다드 데리베이션을 스테이블 베이스라인에서 학습을 한다.
+   # 가우시안 디스트리뷰션의 샘플링힌디. 원래는 평균을쓴다
+   #뉴럴 네트워크의 아웃풋 뮤세타를 쓰는경우도있는데 근데 일단 스탠다드를 픽스한거다 동현이형이 커스트마이즈
+   # StdDev를 학습을 한다
    model = PPO('FixedStddevMlpPolicy', args.env, n_steps=args.n_steps, 
                batch_size=args.batch_size, render=args.render, 
                learning_rate=linear_schedule(initial_lr=args.initial_lr, final_lr=args.final_lr), task=args.task)
